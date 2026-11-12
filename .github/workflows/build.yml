@@ -1,0 +1,32 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  firmware:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the ARM compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi make
+
+      - name: Get ChibiOS
+        run: git clone --depth 1 --branch stable_21.11.x https://github.com/ChibiOS/ChibiOS.git ChibiOS
+
+      - name: Build
+        run: make -j4
+
+      - name: Upload the firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: canio-f405-firmware
+          path: |
+            build/canio-f405.bin
+            build/canio-f405.hex
+            tunerstudio/canio-f405.ini
