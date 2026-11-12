@@ -132,6 +132,7 @@ static void decode_ecu(uint32_t n, const uint8_t *d) {
   if (n <= 7) { lastEcuMs = now_ms(); ecuSeen = true; }
 }
 
+/* Command frames from the ECU (canRxBaseId + n). Any valid one refreshes the command timeout. */
 static void decode_cmd(uint32_t n, const uint8_t *d, uint8_t dlc) {
   bool be = cfg.canBigEndian;
   switch (n) {
@@ -172,6 +173,7 @@ static THD_FUNCTION(canRxThread, arg) {
   }
 }
 
+/* Bit timing, pins, driver and the two CAN threads. Bitrate and listen-only are only read here. */
 void can_init(void) {
   /* APB1 = 42 MHz, 14 time quanta per bit: sync 1 + BS1 11 + BS2 2 (sample point 85.7 %) */
   static const uint16_t brp[4] = { 24, 12, 6, 3 };
@@ -194,6 +196,7 @@ static bool due(uint16_t *acc, uint8_t hz) {      /* called at 100 Hz */
   return false;
 }
 
+/* Called every 10 ms: timeouts, receive rate statistics, and queues the frames that are due. */
 void can_tx_update(void) {
   static uint16_t accAn, accAnVal, accEgt, accFq, accFq2, accDi, accAct;
   static uint8_t rateTick;

@@ -66,6 +66,7 @@ static void check_config(void) {
   strncpy(live.configErrorMsg, msg, sizeof(live.configErrorMsg) - 1);
 }
 
+/* Called every 10 ms: checks the configuration and rebuilds the fault bit fields. */
 void status_update(void) {
   check_config();
 
@@ -105,6 +106,7 @@ void status_update(void) {
 static int16_t s16(float v) { return (int16_t)clampf(v, -32768.0f, 32767.0f); }
 static uint16_t u16(float v) { return (uint16_t)clampf(v, 0.0f, 65535.0f); }
 
+/* Fills the TunerStudio output channel block. Field positions come from the generated outputs_t. */
 void outputs_pack(uint8_t *block) {
   static outputs_t o;
   memset(&o, 0, sizeof(o));

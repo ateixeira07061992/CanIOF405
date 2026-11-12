@@ -39,6 +39,7 @@ static void bridge(float duty) {            /* duty -100..100, positive = openin
   palWritePad(GPIOB, 13, off ? 1U : 0U);
 }
 
+/* Disables the bridge and clears the PID memory. */
 static void bridge_off(void) {
   live.actDuty = 0.0f;
   palSetPad(GPIOB, 13);
@@ -46,6 +47,7 @@ static void bridge_off(void) {
   integral = 0.0f; prevError = 0.0f;
 }
 
+/* Sensor voltage to travel in percent, from the closed / open calibration voltages. */
 static float pct(float v, float closedV, float openV) {
   float span = openV - closedV;
   if (fabsf(span) < 0.05f) return 0.0f;
@@ -123,6 +125,7 @@ static bool read_target(float *target) {
   return true;
 }
 
+/* Normal closed loop: target, safety checks, PID. */
 static void run(uint32_t dtMs, bool sensorOk) {
   float dt = (float)dtMs / 1000.0f;
   float target = 0.0f;
@@ -161,6 +164,7 @@ static void run(uint32_t dtMs, bool sensorOk) {
   bridge(out);
 }
 
+/* Auto calibration state machine: finds the open and closed sensor voltages. */
 static void calibrate(uint32_t now) {
   /* 1 s against each end stop at half duty, value sampled at the end (rusEFI autoCalibrateTps does the same) */
   float duty = clampf(50.0f, 0.0f, cfg.act_maxDuty);
@@ -190,6 +194,8 @@ static void tune_stop(void) {
   state = ST_RUN;
 }
 
+/* Relay autotune: bang-bang around the centre position, measures the oscillation amplitude (a) and period (Tu),
+ * then Ku = 4 b / (pi a), P = 0.35 Ku, I = 0.25 Ku / Tu, D = 0.08 Ku Tu, as rusEFI does for the throttle. */
 static void tune(uint32_t now) {
   float pos = live.actPosition;
   float b = cfg.act_tuneAmplitude;
@@ -277,11 +283,13 @@ static THD_FUNCTION(actThread, arg) {
 
 void act_command(int index) { if (index >= 0 && index <= 3) request = (uint8_t)index; }
 
+/* Forces the bridge off (used while the configuration is burned and before a reset). */
 void act_inhibit(bool on) {
   inhibit = on;
   if (on) palSetPad(GPIOB, 13);
 }
 
+/* Pins, PWM timer and control thread. The PWM frequency is only read here (restart to change). */
 void act_init(void) {
   palSetPad(GPIOB, 13);                        /* bridge disabled */
   palSetPadMode(GPIOB, 13, PAL_MODE_OUTPUT_PUSHPULL);

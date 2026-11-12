@@ -32,6 +32,7 @@ static MUTEX_DECL(tsMutex);         /* one command at a time: both ports edit th
 static inline uint16_t le16(const uint8_t *p) { return (uint16_t)(p[0] | (p[1] << 8)); }
 static inline uint16_t be16(const uint8_t *p) { return (uint16_t)((p[0] << 8) | p[1]); }
 
+/* Sends one framed answer: length, response code, payload, CRC32. */
 static void ts_send(ts_port_t *c, uint8_t code, const uint8_t *data, size_t n) {
   BaseChannel *chn = c->chn;
   uint8_t hdr[3] = { (uint8_t)((n + 1) >> 8), (uint8_t)(n + 1), code };
@@ -47,10 +48,12 @@ static void ts_send(ts_port_t *c, uint8_t code, const uint8_t *data, size_t n) {
   chnWriteTimeout(chn, tail, 4, TIME_MS2I(200));
 }
 
+/* Offset / count check for the page and output block commands. */
 static bool range_ok(uint32_t offset, uint32_t count, uint32_t total) {
   return offset <= total && count <= total && offset + count <= total;
 }
 
+/* Controller commands (the buttons in TunerStudio), see [ControllerCommands] in the ini. */
 static void ts_command(uint16_t subsystem, uint16_t index) {
   switch (subsystem) {
   case 0x10: out_test(index, 1); break;
@@ -64,6 +67,7 @@ static void ts_command(uint16_t subsystem, uint16_t index) {
   }
 }
 
+/* Executes one command that already passed the CRC check. */
 static void ts_handle(ts_port_t *c, uint8_t *p, size_t size) {
   uint8_t cmd = p[0];
   uint8_t *d = p + 1;
@@ -192,6 +196,7 @@ static THD_FUNCTION(tsThread, arg) {
   }
 }
 
+/* Once per second: how many output channel reads each port served. */
 void ts_rate_update(void) {
   uint16_t a = portUsb.reads; portUsb.reads = 0;
   uint16_t b = portSerial.reads; portSerial.reads = 0;
@@ -236,6 +241,7 @@ void cal_update(void) {      /* called at 100 Hz */
 
 static SerialConfig serialCfg;
 
+/* Starts both ports. USB is disconnected for a second first so the PC sees a fresh device after a reset. */
 void ts_start(void) {
   /* serial port for a Bluetooth module: UART4, PC10 = TX, PC11 = RX */
   static const uint32_t bauds[] = { 9600, 19200, 38400, 57600, 115200, 230400 };

@@ -3,6 +3,7 @@
 
 static uint32_t crcTable[256];
 
+/* Builds the CRC32 lookup table (same polynomial as zlib / TunerStudio). Call once at start. */
 void crc32_init(void) {
   for (uint32_t i = 0; i < 256; i++) {
     uint32_t c = i;
@@ -13,6 +14,7 @@ void crc32_init(void) {
   }
 }
 
+/* CRC32 that can be continued over several buffers: pass the previous result as crc (0 to start). */
 uint32_t crc32_inc(const void *buf, uint32_t crc, size_t n) {
   const uint8_t *p = (const uint8_t *)buf;
   crc = ~crc;
@@ -22,6 +24,7 @@ uint32_t crc32_inc(const void *buf, uint32_t crc, size_t n) {
   return ~crc;
 }
 
+/* Limits v to the range lo..hi. */
 float clampf(float v, float lo, float hi) {
   if (v < lo) return lo;
   if (v > hi) return hi;
@@ -50,6 +53,7 @@ static int find_bin(const float *bins, int n, float x, float *frac) {
   return n - 2;
 }
 
+/* 1D table: bins must be ascending. The result is clamped to the first / last value outside the bins. */
 float curve_lookup(const float *bins, const float *vals, int n, float x) {
   float f;
   int i = find_bin(bins, n, x, &f);

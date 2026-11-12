@@ -29,6 +29,7 @@ static void pwm_setup(PWMConfig *c, uint16_t hz) {
   c->period = (pwmcnt_t)(clk / hz);
 }
 
+/* Starts the PWM timers and sets all outputs off. PWM frequencies are only read here (restart to change). */
 void out_init(void) {
   pwm_setup(&pwmA, cfg.pwmFreqA);
   pwm_setup(&pwmB, cfg.pwmFreqB);
@@ -43,6 +44,7 @@ void out_init(void) {
   }
 }
 
+/* TunerStudio test buttons: force one output on / off, or release it back to its normal function. */
 void out_test(int index, int state) {
   if (index == 0) {
     if (state < 0) memset(testState, 0, sizeof(testState));
@@ -77,6 +79,7 @@ float axis_value(uint8_t src, bool *fault) {
   return v;
 }
 
+/* Drives the pin: PWM outputs get the duty, plain outputs are on from 50 % up. Also records the live state. */
 static void apply(int i, float duty) {
   duty = clampf(duty, 0.0f, 100.0f);
   live.outDuty[i] = duty;
@@ -90,6 +93,7 @@ static void apply(int i, float duty) {
   }
 }
 
+/* True when any of the conditions selected for the fault output is present. */
 static bool fault_condition(void) {
   bool f = false;
   if (cfg.faultOut_onSensor) {
@@ -109,6 +113,8 @@ static bool fault_condition(void) {
   return f;
 }
 
+/* Called every 10 ms. For each output, in priority order: test override, fault output function,
+ * low battery / configuration error cut-off, then its normal mode (CAN command, table, always on). */
 void out_update(void) {
   bool cutoff = cfg.vbattOutputCutoff > 0.0f && live.vbatt < cfg.vbattOutputCutoff;
   bool faultNow = fault_condition();

@@ -44,6 +44,7 @@ static volatile uint32_t tim1Overflows;
 
 static const uint8_t crc4tab[16] = { 0, 13, 7, 10, 14, 3, 9, 4, 1, 12, 6, 11, 15, 2, 8, 5 };
 
+/* SENT decoder, called with the time between two falling edges. */
 static void sent_edge(fq_t *f, uint32_t interval, uint32_t nowMs) {
   float iv = (float)interval;
   if (iv > f->sentNominal * 56.0f * 0.8f && iv < f->sentNominal * 56.0f * 1.2f) {
@@ -74,6 +75,7 @@ static bool near_us(uint32_t us, uint32_t target) {
   return d < 32;
 }
 
+/* Called from the capture interrupts for every edge: ts is the timer count, level the pin state after the edge. */
 static void on_edge(int ch, uint32_t ts, bool level) {
   fq_t *f = &fq[ch];
   uint32_t nowMs = now_ms();
@@ -191,6 +193,7 @@ static void load_cfg(int i) {
   f->mode = c->mode;
 }
 
+/* Timers TIM2 (4 x 32 bit capture) and TIM1 (1 x 16 bit capture, extended by an overflow counter), both at 4 MHz. */
 void freq_init(void) {
   for (int i = 0; i < N_FQ; i++) {
     const fq_cfg_t *c = CFG_FQ(&cfg, i);
@@ -236,6 +239,7 @@ static float lp(float prev, float in, uint8_t percent) {
   return prev + (1.0f - (float)percent / 100.0f) * (in - prev);
 }
 
+/* Called every 10 ms: turns the captured timings into the configured value for each input. */
 void freq_update(void) {
   uint32_t t = now_ms();
   for (int i = 0; i < N_FQ; i++) {

@@ -52,6 +52,7 @@ static const ADCConversionGroup adcGroup = {
 /* ADC channel number of each analog input AN1..AN8 */
 static const uint8_t anChannel[N_AN] = { 6, 7, 10, 11, 12, 13, 14, 15 };
 
+/* Pins and continuous ADC conversion (circular DMA buffer, averaged in the callback). */
 void analog_init(void) {
   for (int i = 0; i <= 7; i++) palSetPadMode(GPIOA, i, PAL_MODE_INPUT_ANALOG);
   palSetPadMode(GPIOB, 0, PAL_MODE_INPUT_ANALOG);
@@ -112,6 +113,7 @@ static uint16_t anErrTimer[N_AN];
 static uint16_t egtWarnTimer, egtCritTimer;
 static bool analogPrimed;
 
+/* Called every 10 ms: converts the averaged ADC counts into volts and sensor values, and runs the EGT checks. */
 void analog_update(void) {
   const float lsb = cfg.adcVref / 4095.0f;
 

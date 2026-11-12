@@ -12,10 +12,12 @@ typedef struct {
 
 config_t cfg;
 
+/* Starts the embedded flash driver. */
 void storage_init(void) {
   eflStart(&EFLD1, NULL);
 }
 
+/* Loads the factory configuration into RAM (not saved until the next burn). */
 void config_defaults(void) {
   memset(&cfg, 0, sizeof(cfg));
   config_generated_defaults(&cfg);
@@ -31,6 +33,8 @@ void config_defaults(void) {
   }
 }
 
+/* Reads the configuration from flash. Falls back to the defaults when the header, size or CRC do not match
+ * (first start, or a firmware with a different layout). Returns true when the saved configuration was used. */
 bool config_load(void) {
   BaseFlash *fl = (BaseFlash *)&EFLD1;
   const flash_descriptor_t *fd = flashGetDescriptor(fl);
@@ -45,6 +49,7 @@ bool config_load(void) {
   return false;
 }
 
+/* Writes the RAM configuration to flash. Blocks the whole MCU for 1 to 2 s while the sector is erased. */
 bool config_burn(void) {
   BaseFlash *fl = (BaseFlash *)&EFLD1;
   flash_offset_t off = flashGetSectorOffset(fl, CFG_SECTOR);

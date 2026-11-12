@@ -7,6 +7,7 @@ static const struct { ioportid_t port; uint8_t pad; } diPin[N_DI] = {
 static uint8_t counter[N_DI];
 static bool raw[N_DI];
 
+/* Pin modes. The pull resistor choice is only read here, so it needs a restart to change. */
 void di_init(void) {
   for (int i = 0; i < N_DI; i++) {
     const di_cfg_t *d = CFG_DI(&cfg, i);
@@ -15,6 +16,7 @@ void di_init(void) {
   }
 }
 
+/* Called every 1 ms: a new level is accepted after it has been stable for the configured debounce time. */
 void di_update(void) {
   for (int i = 0; i < N_DI; i++) {
     const di_cfg_t *d = CFG_DI(&cfg, i);

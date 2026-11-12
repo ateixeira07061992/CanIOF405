@@ -14,6 +14,7 @@ static volatile uint8_t resetRequest;      /* 1 reset, 2 reset into the ROM boot
 
 void request_reset(bool dfu) { resetRequest = dfu ? 2 : 1; }
 
+/* Stops the bridge, drops USB and resets. For DFU a magic word is left in RAM for board.c to find. */
 static void do_reset(void) {
   act_inhibit(true);
   chThdSleepMilliseconds(200);             /* lets TunerStudio get its answer */

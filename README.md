@@ -34,7 +34,7 @@ O ini e o firmware têm de ter a mesma assinatura (`rusEFI canio.2026.11.12.f405
 | `src/storage.c` | configuração na flash (sector 11) |
 | `src/analog.c` | 8 analógicas, EGT, tensões |
 | `src/freq.c` | 5 entradas de frequência, flex, Hella, SENT |
-| `src/dio.c` | entradas digitais |
+| `src/dio.c` | 4 entradas digitais |
 | `src/outputs.c` | 6 PWM + 4 on/off, tabelas 8x8 |
 | `src/actuator.c` | ponte H: PID, redundância, calibração, autotune |
 | `src/cancom.c` | CAN: tramas da placa, comandos, valores da ECU |
@@ -42,6 +42,10 @@ O ini e o firmware têm de ter a mesma assinatura (`rusEFI canio.2026.11.12.f405
 | `src/canio_layout.*` | gerado por `tools/gen_ini.py` juntamente com o ini — não editar à mão |
 
 Para mudar o ini: `python3 tools/gen_ini.py tunerstudio/canio-f405.ini src`.
+
+## Mais informação
+
+Ver `docs/PROJETO.md` (pinos, conectores, tramas CAN, hardware, pendentes) e `hardware/` (esquema Eagle e colocação da placa).
 
 ## Por validar em hardware
 
